@@ -22,6 +22,7 @@ sdist/
 var/
 wheels/
 *.egg-info/
+*.dist-info/
 .installed.cfg
 *.egg
 
@@ -99,3 +100,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# background tasks
+*.out
