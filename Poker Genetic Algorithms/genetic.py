@@ -30,6 +30,12 @@ class Population(object):
 		""" Conduct a full Moran process, storing the relative fitnesses in a file """
 		fitnesses = np.sqrt(self.compute_fitness())
 		fitnesses = fitnesses/sum(fitnesses) #normalise to percentages
+		print("Fitnesses of a generation", fitnesses)
+
+		average_strategy = sum(np.array(x.default_prob) * p for p, x in zip(fitnesses, self.pop))
+		average_aggression = sum(x.aggression * p for p, x in zip(fitnesses, self.pop))
+		print("Average:", average_strategy, average_aggression)
+
 		new_generation = list(np.random.choice(self.pop, self.size/2, p=fitnesses, replace=False)) #these are the survivors of the Moran process.
 		births = np.random.choice(self.pop, self.size - self.size/2, p=fitnesses, replace=True) #these are the new additions
 		for new_ai in births:
