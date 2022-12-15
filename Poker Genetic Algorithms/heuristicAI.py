@@ -138,7 +138,7 @@ class HeuristicPlayer(BasePokerPlayer):
             raise_amount = pot / 3 * self.aggression
             ## We should adjust this raise with our rr!!!
             raise_amount = int(max(min(raise_amount, max_raise), min_raise))
-            if len(valid_actions) == 3: #is possible to raise, i.e. have enough money to raise
+            if len(valid_actions) == 3 and raise_amount > 0: #is possible to raise, i.e. have enough money to raise
                 return ("raise", raise_amount)
             else:
                 return ("call", min_bet)
@@ -146,7 +146,7 @@ class HeuristicPlayer(BasePokerPlayer):
             raise_amount = pot / 2 * self.aggression
             ## We should adjust this raise with our rr!!!
             raise_amount = int(max(min(raise_amount, max_raise), min_raise))
-            if len(valid_actions) == 3: #is possible to raise, i.e. have enough money to raise
+            if len(valid_actions) == 3 and raise_amount > 0: #is possible to raise, i.e. have enough money to raise
                 return ("raise", raise_amount)
             else:
                 return ("call", min_bet)

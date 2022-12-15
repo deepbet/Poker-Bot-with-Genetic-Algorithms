@@ -70,7 +70,8 @@ class ActionChecker:
   @classmethod
   def __min_raise_amount(self, players, sb_amount):
     raise_ = self.__fetch_last_raise(players)
-    return raise_["amount"] + raise_["add_amount"] if raise_ else sb_amount*2
+    # the least min_raise allowed is BB
+    return raise_["amount"] + max(raise_["add_amount"], sb_amount * 2) if raise_ else sb_amount*2
 
   @classmethod
   def __is_short_of_money(self, player, amount):
