@@ -42,7 +42,7 @@ def visualize_street_start(street, _round_state, uuid=None):
     ls.append(DIVIDER)
     return "\n".join(ls)
 
-def visualize_declare_action(valid_actions, hole_card, round_state, uuid=None):
+def visualize_declare_action(valid_actions, hole_card, round_state, uuid=None, show_round_state=True):
     ls = []
     ls.append(_visualize_title("Declare your action", uuid))
     ls.append(DIVIDER)
@@ -55,12 +55,13 @@ def visualize_declare_action(valid_actions, hole_card, round_state, uuid=None):
     ))
     ls.append(_visualize_sub_title("hole card"))
     ls.append(_visualize_item(str(hole_card)))
-    ls.append(_visualize_sub_title("round state"))
-    ls.append(visualize_round_state(round_state))
+    if show_round_state:
+        ls.append(_visualize_sub_title("round state"))
+        ls.append(visualize_round_state(round_state))
     ls.append(DIVIDER)
     return "\n".join(ls)
 
-def visualize_game_update(new_action, round_state, uuid=None):
+def visualize_game_update(new_action, round_state, uuid=None, show_round_state=True):
     ls = []
     ls.append(_visualize_title("Game update", uuid))
     ls.append(DIVIDER)
@@ -70,8 +71,9 @@ def visualize_game_update(new_action, round_state, uuid=None):
         new_action["player_uuid"],
         "%s: %s" % (new_action["action"], new_action["amount"])
     )))
-    ls.append(_visualize_sub_title("round state"))
-    ls.append(visualize_round_state(round_state))
+    if show_round_state:
+        ls.append(_visualize_sub_title("round state"))
+        ls.append(visualize_round_state(round_state))
     ls.append(DIVIDER)
     return "\n".join(ls)
 

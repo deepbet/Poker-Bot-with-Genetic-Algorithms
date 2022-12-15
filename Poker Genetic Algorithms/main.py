@@ -1,6 +1,9 @@
+import argparse
+import logging
+
 from pypokerengine.api.game import setup_config, start_poker
 from heuristicAI import HeuristicPlayer
-from consoleAI import ConsolePlayer 
+from deepbet import DeepBetPlayer
 
 init_def_prob = [
     [0.6, 0.2, 0.0, 0.2],
@@ -26,11 +29,51 @@ second_success = ([
     [0,  0.23072949,  0.76927051,  0]
 ], 1.473323533073196)
 
-config = setup_config(max_round=10, initial_stack=200, small_blind_amount=1)
-config.register_player(name="AI_1", algorithm=HeuristicPlayer(init_def_prob))
-config.register_player(name="FIT_1", algorithm=HeuristicPlayer(*first_success))
-config.register_player(name="AI_2", algorithm=HeuristicPlayer(init_def_prob))
-config.register_player(name="AI_3", algorithm=HeuristicPlayer(init_def_prob))
-config.register_player(name="FIT_2", algorithm=HeuristicPlayer(*second_success))
-game_result = start_poker(config, verbose=1)
-print(game_result)
+
+def define_players(deepbet_url):
+    return [
+        {'name': "HE_INIT", 'algorithm': HeuristicPlayer(init_def_prob)},
+        {'name': "AI_1", 'algorithm': HeuristicPlayer(*first_success)},
+        {'name': "DeepBet", 'algorithm': DeepBetPlayer(deepbet_url)},
+        {'name': "AI_2", 'algorithm': HeuristicPlayer(*second_success)},
+        {'name': "HE_INIT_2", 'algorithm': HeuristicPlayer(init_def_prob)},
+        {'name': "AI_3", 'algorithm': HeuristicPlayer(*second_success)},
+    ]
+
+
+def players_shifted_button(deepbet_url, hand_number):
+    players = define_players(deepbet_url)
+    shift = hand_number % len(players)
+    return players[shift:] + players[:shift]
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Run this bot against the DeepBet')
+    parser.add_argument('deepbet_url',
+                        help="the base URL to connect to server (e.g. http://localhost:8080)")
+    parser.add_argument('--iterations', '-i', required=True, type=int,
+                        help='How many hands to play')
+    parser.add_argument('--verbose', '-v', action='count', default=0,
+                        help='show more verbose output')
+    args = parser.parse_args()
+
+    if args.verbose == 0:
+        level = logging.WARNING
+    elif args.verbose == 1:
+        level = logging.INFO
+    else:
+        assert args.verbose >= 2
+        level = logging.DEBUG
+    logging.basicConfig(level=level,
+                        format="[%(asctime)s] %(name)s:%(levelname)-8s %(filename)s:%(lineno)d -> %(message)s")
+
+    for hand in range(args.iterations):
+        config = setup_config(max_round=1, initial_stack=200, small_blind_amount=1)
+        for p in players_shifted_button(args.deepbet_url, hand):
+            config.register_player(**p)
+        game_result = start_poker(config, verbose=1)
+        print(game_result)
+
+
+if __name__ == '__main__':
+    main()
