@@ -34,7 +34,7 @@ def define_players(deepbet_url):
     return [
         {'name': "HE_INIT", 'algorithm': HeuristicPlayer(init_def_prob)},
         {'name': "AI_1", 'algorithm': HeuristicPlayer(*first_success)},
-        {'name': "DeepBet", 'algorithm': DeepBetPlayer(deepbet_url)},
+        {'name': "DeepBet", 'algorithm': DeepBetPlayer(deepbet_url, search_threads=128)},
         {'name': "AI_2", 'algorithm': HeuristicPlayer(*second_success)},
         {'name': "HE_INIT_2", 'algorithm': HeuristicPlayer(init_def_prob)},
         {'name': "AI_3", 'algorithm': HeuristicPlayer(*second_success)},

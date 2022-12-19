@@ -15,8 +15,8 @@ except ImportError:
 
 
 class DeepBetPlayer(BasePokerPlayer):
-    def __init__(self, host):
-        self.api = Api(host, verbose=2)
+    def __init__(self, host, search_threads=None):
+        self.api = Api(host, search_threads=search_threads, verbose=2)
         self.api.connect()
         self.game_settings = None
         self.game_id = None
@@ -90,8 +90,9 @@ class DeepBetPlayer(BasePokerPlayer):
 
 
 class Api:
-    def __init__(self, server_url, verbose=0):
+    def __init__(self, server_url, search_threads=None, verbose=0):
         self.server_url = server_url
+        self.search_threads = search_threads
         self.verbose = verbose
 
     def _start_new_game_url(self):
@@ -116,6 +117,8 @@ class Api:
                 query = "action=Check"
         elif action == "raise":
             query = f"bet={amount}"
+            if self.search_threads is not None:
+                query += f"&use_threads={self.search_threads}"
         else:
             query = None
 
@@ -233,6 +236,10 @@ class Api:
         data = {'cards': list(map(str, cards))}
         if rake is not None:
             data['rake'] = rake
+
+        if self.search_threads is not None:
+            data['search_hints'] = {'use_threads': str(self.search_threads)}
+
         logging.info("Sending board cards: %r", data)
         resp = self.inspect_response(requests.post(self._deal_board_cards_url(game_id), json=data))
         if resp.status_code >= 400:
