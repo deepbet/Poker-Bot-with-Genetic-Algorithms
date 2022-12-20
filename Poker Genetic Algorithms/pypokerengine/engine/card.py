@@ -68,3 +68,20 @@ class Card:
     rank = inverse(cls.RANK_MAP)[str_card[1]]
     return cls(suit, rank)
 
+
+def test_ids():
+    ids = []
+    for s in Card.SUIT_MAP:
+        for r in Card.RANK_MAP:
+            card = Card(s, r)
+            id = card.to_id()
+            new_card = Card.from_id(id)
+            assert new_card == card
+            ids.append(id)
+
+    assert len(ids) == 52
+    assert len(set(ids)) == 52
+
+
+if __name__ == '__main__':
+    test_ids()

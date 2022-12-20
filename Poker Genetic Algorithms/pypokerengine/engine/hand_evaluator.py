@@ -32,8 +32,11 @@ class HandEvaluator:
     strength = self.HAND_STRENGTH_MAP[row_strength]
     hand_high = self.__mask_hand_high_rank(hand)
     hand_low = self.__mask_hand_low_rank(hand)
-    hole_high = self.__mask_hole_high_rank(hand)
-    hole_low = self.__mask_hole_low_rank(hand)
+    # hole_high = self.__mask_hole_high_rank(hand)
+    # hole_low = self.__mask_hole_low_rank(hand)
+    holes = [card.to_id() for card in hole]
+    hole_high = max(holes)
+    hole_low = min(holes)
 
     return {
         "hand" : {
