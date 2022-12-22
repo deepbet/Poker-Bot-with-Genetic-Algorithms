@@ -16,6 +16,7 @@ except ImportError:
 
 class DeepBetPlayer(BasePokerPlayer):
     def __init__(self, host, search_threads=None):
+        super().__init__()
         self.api = Api(host, search_threads=search_threads, verbose=2)
         self.api.connect()
         self.game_settings = None
@@ -189,7 +190,12 @@ class Api:
             resp = self.inspect_response(requests.post(url))
             if resp.status_code >= 400:
                 raise ValueError(resp.text)
-            task_id = resp.json()['task_id']
+
+            res = resp.json()
+            bp_err = res.get('payload')
+            if bp_err:
+                logging.error(bp_err)
+            task_id = res['task_id']
             self.wait_task_completion(task_id, timeout=1, error=False)
 
     def get_rts_action(self, game_id, valid_actions):
@@ -198,7 +204,12 @@ class Api:
         if resp.status_code >= 400:
             raise ValueError(resp.text)
 
-        task_id = resp.json()['task_id']
+        res = resp.json()
+        bp_strategy = res.get('payload')
+        if bp_strategy:
+            logging.warning("Received fallback: %s", bp_strategy)
+
+        task_id = res['task_id']
         result = self.wait_task_completion(task_id)['GotStrategy']
         logging.info("Received strategy: %r", result)
 
@@ -245,7 +256,11 @@ class Api:
         if resp.status_code >= 400:
             raise ValueError(resp.text)
 
-        task_id = resp.json()['task_id']
+        res = resp.json()
+        bp_err = res.get('payload')
+        if bp_err:
+            logging.error(bp_err)
+        task_id = res['task_id']
         self.wait_task_completion(task_id, timeout=1, error=False)
 
     @classmethod
