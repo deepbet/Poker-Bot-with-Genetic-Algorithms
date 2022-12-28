@@ -15,9 +15,10 @@ except ImportError:
 
 
 class DeepBetPlayer(BasePokerPlayer):
-    def __init__(self, host, search_threads=None):
+    def __init__(self, host, search_threads=None, off_tree_actions_search_time_ms=None):
         super().__init__()
-        self.api = Api(host, search_threads=search_threads, verbose=2)
+        self.api = Api(host, search_threads=search_threads,
+                       off_tree_actions_search_time_ms=off_tree_actions_search_time_ms, verbose=2)
         self.api.connect()
         self.game_settings = None
         self.game_id = None
@@ -91,9 +92,10 @@ class DeepBetPlayer(BasePokerPlayer):
 
 
 class Api:
-    def __init__(self, server_url, search_threads=None, verbose=0):
+    def __init__(self, server_url, search_threads=None, off_tree_actions_search_time_ms=None, verbose=0):
         self.server_url = server_url
         self.search_threads = search_threads
+        self.off_tree_actions_search_time_ms = off_tree_actions_search_time_ms
         self.verbose = verbose
 
     def _start_new_game_url(self):
@@ -120,6 +122,8 @@ class Api:
             query = f"bet={amount}"
             if self.search_threads is not None:
                 query += f"&use_threads={self.search_threads}"
+            if self.off_tree_actions_search_time_ms is not None:
+                query += f"&search_time_ms={self.off_tree_actions_search_time_ms}"
         else:
             query = None
 
