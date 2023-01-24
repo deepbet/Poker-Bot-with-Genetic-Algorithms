@@ -7,11 +7,22 @@ def pp_to_array(hand):
 def pp_to_deuces(hand):
     return [d.Card.new(card[1] + card[0].lower()) for card in hand]
 
-## Pre-process Preflop Odds
-import pandas as pd
-preflop_eq = pd.read_csv('preflop_equity.csv')
-preflop_eq['Cards'] = [str(x) for x in preflop_eq['Cards']]
-preflop_eq.set_index('Cards')
+
+preflop_eq = None
+
+
+def init_preflop_equities():
+    global preflop_eq
+
+    ## Pre-process Preflop Odds
+    import pandas as pd
+    from os import path
+
+    eq_path = path.join(path.dirname(__file__), 'preflop_equity.csv')
+    preflop_eq = pd.read_csv(eq_path)
+    preflop_eq['Cards'] = [str(x) for x in preflop_eq['Cards']]
+    preflop_eq.set_index('Cards')
+
 
 def preflop(cards, n):
     """
@@ -20,6 +31,7 @@ def preflop(cards, n):
         num of players -- 3
     Output: Preflop win probability
     """
+    global preflop_eq
     return float(preflop_eq.loc[(preflop_eq['Cards'] == cards[0]) | (preflop_eq['Cards'] == cards[1])][str(n) + ' plyrs'].tolist()[0].split('%')[0])/100
 
 def add(list_of_lists):

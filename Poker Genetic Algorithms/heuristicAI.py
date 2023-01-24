@@ -1,6 +1,5 @@
 from pypokerengine.players import BasePokerPlayer
 import helper
-from deuces import Card
 import deuces as d
 import numpy as np
 
@@ -35,6 +34,7 @@ class HeuristicPlayer(BasePokerPlayer):
         self.default_prob = def_prob
         self.vals = ['s', 'h', 'd', 'c']
         self.suits = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+        helper.init_preflop_equities()
 
     def mutate(self):
         """
@@ -179,6 +179,3 @@ def setup_ai():
         [0.0, 0.3, 0.7, 0.0]
     ]
     return HeuristicPlayer(init_def_prob)
-
-
-
