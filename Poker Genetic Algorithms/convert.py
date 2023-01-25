@@ -203,6 +203,22 @@ def print_action(action, prev_contrib, start_stack):
 
 
 def print_showdown(players, contributions, folds, winners, pot, board_cards, start_stack, pockets):
+    total_contrib = {k: sum(v) for k, v in contributions.items()}
+    max_contrib = max(total_contrib.values())
+    # print("MAX contrib is", max_contrib, file=sys.stderr)
+    max_contrib_players = sum(1 for x in total_contrib.values() if x == max_contrib)
+    if max_contrib_players == 1:
+        second_max_contrib = max(total_contrib.values(), key=lambda x: 0 if x == max_contrib else x)
+        uncalled = max_contrib - second_max_contrib
+        # print("SECOND MAX contrib is", second_max_contrib, file=sys.stderr)
+    else:
+        uncalled = None
+
+    for p, data in players.items():
+        if total_contrib[p] == max_contrib and uncalled:
+            print(f"Uncalled bet (${uncalled}) returned to {p}")
+            pot -= uncalled
+
     board_raw = [Card.from_str(card) for card in board_cards]
     if len(pockets) > 1:
         print('*** SHOW DOWN ***')
@@ -225,11 +241,13 @@ def print_showdown(players, contributions, folds, winners, pot, board_cards, sta
                 assert stack > left
                 collected = stack - left
                 winners_profit[p] = collected
-                assert collected == profit
-                print(f"{p} collected ${collected} from pot")
+                if uncalled:
+                    assert collected == profit + uncalled
+                else:
+                    assert collected == profit
+                print(f"{p} collected ${profit} from pot")
             else:
                 assert stack == left
-                # TODO: 'Uncalled bet ($82) returned to Mike'
         else:
             assert p not in winners, winners
 
