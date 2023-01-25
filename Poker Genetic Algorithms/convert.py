@@ -263,20 +263,23 @@ def print_showdown(players, contributions, folds, winners, pot, board_cards, sta
                 assert fold_round == PREFLOP
                 status += " (didn't bet)"
         else:
-            pocket = pockets[name]
-            rank = HandEvaluator.eval_hand(pocket, board_raw)
-            pocket = cards_to_str([str(c) for c in pocket])
-
-            if rank < max_rank:
-                status = f'mucked {pocket}'
+            pocket = pockets.get(name)
+            if pocket is None:
+                status = "mucked"
             else:
-                max_rank = rank
+                rank = HandEvaluator.eval_hand(pocket, board_raw)
+                pocket = cards_to_str([str(c) for c in pocket])
 
-                if name in winners:
-                    profit = winners_profit[name]
-                    status = f"showed {pocket} and won ${profit} with {rank}"
+                if rank < max_rank:
+                    status = f'mucked {pocket}'
                 else:
-                    status = f"showed {pocket} and lost with {rank}"
+                    max_rank = rank
+
+                    if name in winners:
+                        profit = winners_profit[name]
+                        status = f"showed {pocket} and won ${profit} with {rank}"
+                    else:
+                        status = f"showed {pocket} and lost with {rank}"
 
         name += POS[i]
         print(f'Seat {i}: {name} {status}')
@@ -378,24 +381,27 @@ def parse_winners(f):
             # yield [data[0], data[1], data[2], int(data[3])]
             winners.append(data[0])
         else:
-            assert '-- hand info --' in line
+            if '-- round state --' in line:
+                pass  # no pocket info (probably all folded)
+            else:
+                assert '-- hand info --' in line
 
-            while True:
-                line = get_next_line(f)
-                m = re.search(pocket_player_re, line)
-                if not m:
-                    break
+                while True:
+                    line = get_next_line(f)
+                    m = re.search(pocket_player_re, line)
+                    if not m:
+                        break
 
-                assert m, line
-                name = m.group(1)
+                    assert m, line
+                    name = m.group(1)
 
-                line = get_next_line(f)
-                assert '- hand => ' in line
-                line = get_next_line(f)
-                m = re.search(pocket_re, line)
-                assert m
-                pocket = [Card.from_id(int(card_id)) for card_id in m.groups()]
-                pockets[name] = pocket
+                    line = get_next_line(f)
+                    assert '- hand => ' in line
+                    line = get_next_line(f)
+                    m = re.search(pocket_re, line)
+                    assert m
+                    pocket = [Card.from_id(int(card_id)) for card_id in m.groups()]
+                    pockets[name] = pocket
             return winners, pockets
 
 
