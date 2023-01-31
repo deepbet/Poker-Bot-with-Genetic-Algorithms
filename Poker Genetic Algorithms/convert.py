@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from collections import defaultdict, OrderedDict
 import json
+import random
 
 from helper import pp_to_array
 from pypokerengine.engine.card import Card
@@ -15,7 +16,8 @@ def main(f, limit=None):
     hand_id = 0
     while True:
         try:
-            parse_hand(f, HAND_ID_START + hand_id)
+            game_id = random.randrange(HAND_ID_START, HAND_ID_START * 2)
+            parse_hand(f, game_id)
         except StopIteration:
             print(f"{hand_id} hands processed", file=sys.stderr)
             break
