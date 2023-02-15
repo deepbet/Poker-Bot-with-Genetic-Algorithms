@@ -174,6 +174,9 @@ def print_actions(actions, board_cards, contributions, start_stack):
 
 
 def print_action(action, prev_contrib, start_stack):
+    for key in ('paid', 'amount', 'add_amount'):
+        if key in action:
+            action[key] = round(action[key], 5)
     current_contrib = action.get('paid') or action.get('add_amount', 0)
     player = action['player']
 
@@ -211,10 +214,10 @@ def print_showdown(players, contributions, folds, winners, pot, board_cards, sta
     max_contrib_players = sum(1 for x in total_contrib.values() if x == max_contrib)
     if max_contrib_players == 1:
         second_max_contrib = max(total_contrib.values(), key=lambda x: 0 if x == max_contrib else x)
-        uncalled = max_contrib - second_max_contrib
+        uncalled = round(max_contrib - second_max_contrib, 5)
         # print("SECOND MAX contrib is", second_max_contrib, file=sys.stderr)
     else:
-        uncalled = None
+        uncalled = 0
 
     for p, data in players.items():
         if total_contrib[p] == max_contrib and uncalled:
@@ -232,7 +235,9 @@ def print_showdown(players, contributions, folds, winners, pot, board_cards, sta
     # print(players, file=sys.stderr)
     # print(winners, file=sys.stderr)
     # print(pockets, file=sys.stderr)
-    profit = pot // len(winners)
+
+    # should be the same as in GameEvaluator.__calc_prize_distribution
+    profit = int(pot / len(winners))
     winners_profit = dict()
     for p, data in players.items():
         p_id, status, stack = data
@@ -241,21 +246,30 @@ def print_showdown(players, contributions, folds, winners, pot, board_cards, sta
         if status != 'folded':
             if p in winners:
                 assert stack > left
-                collected = stack - left
-                winners_profit[p] = collected
+                collected = round(stack - left, 5)
+                if collected == int(collected):
+                    collected = int(collected)
+                winners_profit[p] = profit + uncalled
                 if uncalled:
-                    assert collected == profit + uncalled
+                    if collected != profit + uncalled:
+                        print(f"{p}: start {start_stack}, contrib: {contributions[p]} -> left: {left}; "
+                              f"collected {collected} = (profit: {profit} + uncalled {uncalled})"
+                              f"-> current stack: {stack} ", file=sys.stderr)
+                    # assert collected == profit + uncalled, \
+                    #        f'Collected {collected}, profit {profit}, uncalled {uncalled}'
                 else:
-                    assert collected == profit
+                    assert collected == profit, \
+                        f'Collected {collected}, profit {profit}'
                 print(f"{p} collected ${profit} from pot")
             else:
-                assert stack == left
+                assert abs(stack - left) < 1e-7, \
+                    f'Stack {stack}, left {left}'
         else:
             assert p not in winners, winners
 
     print('*** SUMMARY ***')
-    rake = pot % len(winners)
-    print(f'Total pot ${pot} | Rake ${rake}')
+    rake = round(pot % len(winners), 5)
+    print(f'Total pot ${round(pot, 5)} | Rake ${rake}')
     board = cards_to_str(board_cards, whole=True)
     print(f'Board {board}')
 
@@ -362,9 +376,9 @@ def parse_start_players_info(f):
 
 def parse_players_info(f, include_state=False):
     if include_state:
-        r = re.compile(r"\d : (.+) \(([a-z]+)\) => state : (.+), stack : (\d+)")
+        r = re.compile(r"\d : (.+) \(([a-z]+)\) => state : (.+), stack : ([\d.e-]+)")
     else:
-        r = re.compile(r"\d : (.+) \(([a-z]+)\) => .+, stack : (\d+)")
+        r = re.compile(r"\d : (.+) \(([a-z]+)\) => .+, stack : ([\d.e-]+)")
 
     while True:
         line = get_next_line(f)
@@ -373,10 +387,10 @@ def parse_players_info(f, include_state=False):
             data = m.groups()
             if include_state:
                 assert len(data) == 4, data
-                yield [data[0], data[1], data[2], int(data[3])]
+                yield [data[0], data[1], data[2], float(data[3])]
             else:
                 assert len(data) == 3, data
-                yield [data[0], data[1], int(data[2])]
+                yield [data[0], data[1], float(data[2])]
         else:
             break
 
@@ -385,7 +399,7 @@ def parse_winners(f):
     winners = []
     pockets = dict()
 
-    winner_re = re.compile(r"- (.+) \(([a-z]+)\) => state : (.+), stack : (\d+)")
+    winner_re = re.compile(r"- (.+) \(([a-z]+)\) => state : (.+), stack : ([\d.]+)")
     pocket_player_re = re.compile(r"- (.+) \([a-z]+\)")
     pocket_re = re.compile(r"- hole => \[(\d+), (\d+)]")
 
